@@ -4,28 +4,28 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <span>
 
 using namespace std;
 
-template <typename Documents, typename Term>
-vector<double> ComputeTfIdfs(const Documents& documents, const Term& term) {
-    vector<double> tf_idfs; // вектор, содержащий TD-IDF
+/*
+TF - частота слова в конкретном документе
+IDF - количество всех документов делят на количество тех, где встречается слово
+*/
 
-    /*
-    TF - частота слова в конкретном документе 
-    IDF - количество всех документов делят на количество тех, где встречается слово
-    */
-     
+template <typename Documents, typename Term> // Document - тип контейнера, Term - тип искомого слова
+vector<double> ComputeTfIdfs(const Documents& documents, const Term& term) {
+
+    vector<double> tf_idfs; // вектор, содержащий TD-IDF     
     int term_occurrences{}; // количество документов, где встречается term
     for (const auto& document : documents) {
-        int сount_term_in_document = std::count(document.begin(), document.end(), term);
+        int сount_term_in_document = std::count(document.begin(), document.end(), term); 
         tf_idfs.push_back(static_cast<double>(сount_term_in_document) / document.size());
 
         if (сount_term_in_document > 0) { // если терм в принципе встречается, 
             ++term_occurrences; // то +1 документ, где есть терм
         }
     }
+
     double idf = log(static_cast<double>(documents.size()) / term_occurrences);
     for (auto& td : tf_idfs) {
         td *= idf;
