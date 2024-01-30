@@ -1,12 +1,12 @@
-﻿#include <algorithm>
-#include <cmath>
-#include <iostream>
-#include <map>
-#include <numeric>
-#include <set>
-#include <string>
-#include <utility>
-#include <vector>
+﻿#include <algorithm> 
+#include <cmath> 
+#include <iostream> 
+#include <map> 
+#include <numeric> 
+#include <set> 
+#include <string> 
+#include <utility> 
+#include <vector> 
 
 using namespace std;
 
@@ -28,10 +28,10 @@ int ReadLineWithNumber() {
 
 enum class DocumentStatus
 {
-    ACTUAL, // актуальный
-    IRRELEVANT, // устаревший
-    BANNED, // отклонённый
-    REMOVED // удалённый
+    ACTUAL, // актуальный 
+    IRRELEVANT, // устаревший 
+    BANNED, // отклонённый 
+    REMOVED // удалённый 
 };
 
 vector<string> SplitIntoWords(const string& text) {
@@ -85,15 +85,19 @@ public:
         ++document_count_;
     }
 
-    template <typename T>
-    vector<Document> FindTopDocuments(const string& raw_query, T  temp_status) const {
+    template <typename DocumentPredicate>
+    vector<Document> FindTopDocuments(const string& raw_query, DocumentPredicate predicate) const {
         const Query& query_words = ParseQuery(raw_query);
 
-        auto matched_documents = FindAllDocuments(query_words, temp_status); // id, relevance, rating, status
+        auto matched_documents = FindAllDocuments(query_words, predicate); // returns: id, relevance, rating, status 
 
         sort(matched_documents.begin(), matched_documents.end(), [](const Document& lhs, const Document& rhs) {
-            if (lhs.relevance != rhs.relevance) return lhs.relevance > rhs.relevance;
-            else if (std::abs(lhs.relevance - rhs.relevance) < EPSILON) return lhs.rating > rhs.rating;
+            if (lhs.relevance != rhs.relevance) {
+                return lhs.relevance > rhs.relevance;
+            }
+            else if (std::abs(lhs.relevance - rhs.relevance) < EPSILON) {
+                return lhs.rating > rhs.rating;
+            }
             else return false;
             });
 
@@ -104,16 +108,20 @@ public:
         return matched_documents;
     }
 
-    vector<Document> FindTopDocuments(const string& raw_query) const {
-        return FindTopDocuments(raw_query, [](const int document_id, const DocumentStatus status, const int rating) {
-            return status == DocumentStatus::ACTUAL;
+    vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus status) const {
+        return FindTopDocuments(raw_query, [&status](const int document_id, const DocumentStatus t_status, const int rating) {
+            return status == t_status;
             });
+    }
+
+    vector<Document> FindTopDocuments(const string& raw_query) const {
+        return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
     }
 
     tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query, int document_id) const {
         const Query query = ParseQuery(raw_query);
         vector<string> matched_words;
-        for (const string& word : query.plus_words) { // проходимся по плюс-словам
+        for (const string& word : query.plus_words) { // проходимся по плюс-словам 
             if (documents_.at(word).count(document_id)) {
                 matched_words.push_back(word);
             }
@@ -128,11 +136,11 @@ public:
     }
 
 private:
-    map<int, int> ratings; // <document_id, rating> ~ словарь рейтингов
-    map<int, DocumentStatus> status; // <document_id, status> ~ словарь статусов
-    map<string, map<int, double>> documents_; // <word, map<id_document, relevance>> 
     int document_count_{};
     set<string> stop_words_;
+    map<int, int> ratings; // <document_id, rating> ~ словарь рейтингов 
+    map<int, DocumentStatus> status; // <document_id, status> ~ словарь статусов 
+    map<string, map<int, double>> documents_; // <word, map<id_document, relevance>>  
 
     struct Query {
         set<string> plus_words;
@@ -141,23 +149,16 @@ private:
 
     template <typename T>
     vector<Document> FindAllDocuments(const Query& query_words, T t_status) const {
-        map<int, double> document_to_relevance; // <document_id, relevance>
-
+        map<int, double> document_to_relevance; // <document_id, relevance> 
         for (const string& plus_word : query_words.plus_words) {
             if (documents_.count(plus_word)) {
                 for (auto& [document_id, tf] : documents_.at(plus_word)) {
-                    /*
-                    в это месте компилятор обращается к лямбда-функции, которая была передана вторым аргументом из FindTopDocuments
-                    из функции main. если определить свою лямбда-функцию, например, в определении FindTopDocuments и перед передачей
-                    терма в FindAllDocuments, то в условии ниже комплиятор будет обращаться именно к этой функции.
-                    */
                     if (t_status(document_id, status.at(document_id), ratings.at(document_id))) {
                         document_to_relevance[document_id] += ComputeIDF(plus_word) * tf;
                     }
                 }
             }
         }
-
         for (const string& minus_word : query_words.minus_words) {
             if (documents_.count(minus_word)) {
                 for (const auto& [document_id, relevance] : documents_.at(minus_word)) {
@@ -165,7 +166,6 @@ private:
                 }
             }
         }
-
         vector<Document> matched_documents;
         for (auto& [document_id, relevance] : document_to_relevance) {
             matched_documents.push_back({ document_id, relevance, ratings.at(document_id), status.at(document_id) });
@@ -198,7 +198,7 @@ private:
         return words;
     }
 
-    Query ParseQuery(const string& text) const { // поиск по запросу
+    Query ParseQuery(const string& text) const { // поиск по запросу 
         Query query_words;
         for (const string& word : SplitIntoWordsNoStop(text)) {
             if (word.at(0) != '-') {
@@ -219,6 +219,7 @@ void PrintDocument(const Document& document) {
         << "rating = "s << document.rating
         << " }"s << endl;
 }
+
 int main() {
     setlocale(LC_ALL, "RUS");
     SearchServer search_server;
@@ -231,12 +232,12 @@ int main() {
     for (const Document& document : search_server.FindTopDocuments("пушистый ухоженный кот"s)) {
         PrintDocument(document);
     }
-    cout << "ACTUAL:"s << endl;
-    for (const Document& document : search_server.FindTopDocuments("пушистый ухоженный кот"s, [](int document_id, DocumentStatus status, int rating) -> bool { return status == DocumentStatus::ACTUAL; })) {
+    cout << "BANNED:"s << endl;
+    for (const Document& document : search_server.FindTopDocuments("пушистый ухоженный кот"s, DocumentStatus::BANNED)) {
         PrintDocument(document);
     }
     cout << "Even ids:"s << endl;
-    for (const Document& document : search_server.FindTopDocuments("пушистый ухоженный кот"s, [](int document_id, DocumentStatus status, int rating) -> bool { return document_id % 2 == 0; })) {
+    for (const Document& document : search_server.FindTopDocuments("пушистый ухоженный кот"s, [](int document_id, DocumentStatus status, int rating) { return document_id % 2 == 0; })) {
         PrintDocument(document);
     }
     return 0;
