@@ -116,46 +116,35 @@ public:
 	//} 
 
 	// Обратно-симметричный обход
-	//void PrintInverselySymmetrical(Node<Type>* root, int tmp = 0) {
-	//	if (root != nullptr) {
-	//		PrintInverselySymmetrical(root->rhs, tmp + 1);
-
-	//		std::string str;
-	//		for (int i = 0; i < tmp; i++) {
-	//			str += "\t"s;
-	//		}
-	//		std::cout << str << root->value;
-	//		if (root->number_of_copies > 1) {
-	//			std::cout << "("s << root->number_of_copies << ")"s << std::endl;
-	//		}
-	//		else {
-	//			std::cout << std::endl;
-	//		}
-
-	//		PrintInverselySymmetrical(root->lhs, tmp + 1);
-	//	}
-	//}
-	void PrintInverselySymmetrical(Node<Type>* root, int tmp = 0) {
+	void PrintInverselySymmetrical(Node<Type>* root, int depth = 0, bool isRoot = true) {
 		if (root != nullptr) {
-			PrintInverselySymmetrical(root->rhs, tmp + 1);
+			// Определяем количество отступов для узлов на первом уровне
+			int indent = isRoot ? 4 : 1;
 
-			std::string str;
-			for (int i = 0; i < tmp; i++) {
-				str += "\t"s;
+			// Вывод правого поддерева
+			PrintInverselySymmetrical(root->rhs, depth + 1, false);
+
+			// Выводим отступы в зависимости от глубины узла
+			for (int i = 0; i < depth; i++) {
+				std::cout << "\t";
 			}
-			std::cout << str << root->value;
+
+			// Вывод значения узла
+			std::cout << root->value;
 			if (root->number_of_copies > 1) {
-				std::cout << "("s << root->number_of_copies << ")"s << std::endl;
+				std::cout << "(" << root->number_of_copies << ")";
 			}
-			else {
-				std::cout << std::endl;
+			std::cout << std::endl;
+
+			// Если это корень, добавляем дополнительные пробелы между поддеревьями
+			if (isRoot && root->lhs) {
+				for (int i = 0; i < indent; i++) {
+					std::cout << std::endl;
+				}
 			}
 
-			PrintInverselySymmetrical(root->lhs, tmp + 1);
-
-			// Уменьшаем переменную tmp после обработки правого поддерева
-			// чтобы корректно отобразить уровни узлов
-			tmp--;
+			// Вывод левого поддерева
+			PrintInverselySymmetrical(root->lhs, depth + 1, false);
 		}
 	}
 
@@ -250,13 +239,13 @@ public:
 				delete node;
 				return nullptr;
 			}
-			if (node->lhs == nullptr) {
+			if (node->lhs == nullptr and node->rhs != nullptr) {
 				// Узел имеет только правого потомка
 				Node<Type>* tmp = node->rhs;
 				delete node;
 				return tmp;
 			}
-			if (node->rhs == nullptr) {
+			if (node->rhs == nullptr and node->lhs != nullptr) {
 				// Узел имеет только левого потомка
 				Node<Type>* tmp = node->lhs;
 				delete node;
