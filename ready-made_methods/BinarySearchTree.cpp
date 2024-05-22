@@ -227,10 +227,9 @@ public:
 
 		return root;
 	}
-
 	Node<Type>* Pop(Node<Type>* node, Type val) {
 		if (node == nullptr) {
-			return node; // Узел не найден, ничего не делаем
+			return nullptr; // Узел не найден, ничего не делаем
 		}
 
 		if (val == node->value) {
@@ -277,7 +276,7 @@ public:
 		}
 
 		return node;
-	} 
+	}
 
 	Node<Type>* Peek(Node<Type>* parent, const Type value) noexcept {
 		if (parent == nullptr) {
